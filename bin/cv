@@ -1,12 +1,12 @@
-#!/usr/bin/env php
+#!/usr/bin/env php7
 <?php
 ini_set('display_errors', 1);
 if (PHP_SAPI !== 'cli') {
   echo "cv is a command-line tool\n";
   exit(1);
 }
-if (version_compare(PHP_VERSION, '5.4', '<')) {
-  echo "cv requires PHP 5.4+\n";
+if (version_compare(PHP_VERSION, '7.0', '<')) {
+  echo "cv requires PHP 7.0+\n";
   exit(2);
 }
 $found = 0;
