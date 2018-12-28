@@ -71,8 +71,8 @@ trait BootTrait {
   public function _boot_classloader(InputInterface $input, OutputInterface $output) {
     $output->writeln('<info>[BootTrait]</info> Call basic cv bootstrap (' . $input->getOption('level') . ')', OutputInterface::VERBOSITY_DEBUG);
     \Civi\Cv\Bootstrap::singleton()->boot($this->createBootParams($output) + array(
-        'prefetch' => FALSE,
-      ));
+      'prefetch' => FALSE,
+    ));
   }
 
   /**
@@ -84,8 +84,8 @@ trait BootTrait {
   public function _boot_settings(InputInterface $input, OutputInterface $output) {
     $output->writeln('<info>[BootTrait]</info> Call basic cv bootstrap (' . $input->getOption('level') . ')', OutputInterface::VERBOSITY_DEBUG);
     \Civi\Cv\Bootstrap::singleton()->boot($this->createBootParams($output) + array(
-        'prefetch' => FALSE,
-      ));
+      'prefetch' => FALSE,
+    ));
   }
 
   /**
@@ -103,7 +103,13 @@ trait BootTrait {
     \CRM_Core_Config::singleton();
 
     $output->writeln('<info>[BootTrait]</info> Call CMS bootstrap', OutputInterface::VERBOSITY_DEBUG);
-    \CRM_Utils_System::loadBootStrap(array(), FALSE);
+    // if env CIVICRM_SETTINGS var is set, send as cmsPath so we can call cv from anywhere
+    if (!empty(getenv('CIVICRM_SETTINGS'))) {
+      \CRM_Utils_System::loadBootStrap(array(), FALSE, TRUE, getenv('CIVICRM_SETTINGS'));
+    }
+    else {
+      \CRM_Utils_System::loadBootStrap(array(), FALSE);
+    }
 
     if ($input->getOption('user')) {
       $output->writeln('<info>[BootTrait]</info> Set system user', OutputInterface::VERBOSITY_DEBUG);

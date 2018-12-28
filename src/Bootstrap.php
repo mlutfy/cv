@@ -141,6 +141,12 @@ class Bootstrap {
       $this->options = $options = array_merge($this->options, $options);
       $this->writeln("Options: " . Encoder::encode($options, 'json-pretty'), OutputInterface::VERBOSITY_DEBUG);
 
+      // Let's force env CIVICRM_SETTINGS must exists (For AEgir compatibility)
+      if (empty(getenv($this->options['env']))) {
+        throw new \Exception("env variable CIVICRM_SETTINGS is not defined."
+          . " You must set variable CIVICRM_SETTINGS to point to the preferred civicrm.settings.php.");
+      }
+
       $this->writeln("Find settings file", OutputInterface::VERBOSITY_DEBUG);
       $settings = $this->getCivicrmSettingsPhp($options);
       if (empty($settings) || !file_exists($settings)) {
@@ -162,12 +168,29 @@ class Bootstrap {
         throw new \Exception("Could not load the CiviCRM settings file: {$settings}");
       }
 
+      // AEgir hack, we need to include drushrc.php file where db values are stored
+      $drushrc = $this->getDrushRC($options);
+      $this->writeln("Load drushrc.php file \"" . $drushrc . "\"", OutputInterface::VERBOSITY_DEBUG);
+      if (empty($drushrc) || !file_exists($drushrc)) {
+        throw new \Exception("Failed to locate drushrc.php.");
+      }
+      $error = @include_once $drushrc;
+      if ($error == FALSE) {
+        $this->writeln("Failed to load drushrc.php file", OutputInterface::VERBOSITY_VERBOSE);
+        throw new \Exception("Could not load the drushrc.php file: {$drushrc}");
+      }
+
       $this->writeln("Find CMS root for \"" . $this->getSearchDir() . "\"", OutputInterface::VERBOSITY_VERBOSE);
       list ($cmsType, $cmsBasePath) = $this->findCmsRoot($this->getSearchDir());
       $this->writeln("Found \"$cmsType\" in \"$cmsBasePath\"", OutputInterface::VERBOSITY_VERBOSE);
 
       if (PHP_SAPI === "cli") {
         $this->writeln("Simulate web environment in CLI", OutputInterface::VERBOSITY_VERBOSE);
+        // Let's force HTTP_HOST for multisite compatibility, using settings file folder's name
+        $folders = explode('/', $settings);
+        $httpHost = $folders[count($folders) - 2];
+        $_SERVER['HTTP_HOST'] = $httpHost;
+
         $_SERVER['SCRIPT_FILENAME'] = $cmsBasePath . '/index.php';
         $_SERVER['REMOTE_ADDR'] = "127.0.0.1";
         $_SERVER['SERVER_SOFTWARE'] = NULL;
@@ -255,6 +278,27 @@ class Bootstrap {
    */
   public function setOptions($options) {
     $this->options = $options;
+  }
+
+  /**
+   * @param array $options
+   * @return string
+   * @throws \Exception
+   */
+  public function getDrushRC($options) {
+    $drushrc = NULL;
+
+    if (defined('CIVICRM_CONFDIR') && file_exists(CIVICRM_CONFDIR . '/drushrc.php')) {
+      $drushrc = CIVICRM_CONFDIR . '/drushrc.php';
+    }
+    elseif (!empty($options['env']) && getenv($options['env'])) {
+      $drushPath = str_replace('civicrm.settings.php', 'drushrc.php', getenv($options['env']));
+      if (file_exists($drushPath)) {
+        $drushrc = $drushPath;
+      }
+    }
+
+    return $drushrc;
   }
 
   /**
@@ -376,8 +420,10 @@ class Bootstrap {
         // Future? 'vendor/civicrm/joomla/civicrm.php' => 'joomla',
       ),
       'drupal' => array(
-        'modules/system/system.module', // D7
-        'core/core.services.yml', // D8
+    // D7
+        'modules/system/system.module',
+    // D8
+        'core/core.services.yml',
       ),
       'backdrop' => array(
         'core/modules/layout/layout.module',
