@@ -2,7 +2,8 @@
 namespace Civi\Cv\Command;
 
 use Civi\Cv\Encoder;
-use Symfony\Component\Console\Input\InputArgument;
+use Civi\Cv\Util\SetupCommandTrait;
+use Civi\Cv\Util\DebugDispatcherTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -10,8 +11,8 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class CoreInstallCommand extends BaseCommand {
 
-  use \Civi\Cv\Util\SetupCommandTrait;
-  use \Civi\Cv\Util\DebugDispatcherTrait;
+  use SetupCommandTrait;
+  use DebugDispatcherTrait;
 
   protected function configure() {
     $this
@@ -125,7 +126,6 @@ $ cv core:install -m extras.opt-in.versionCheck=1
         return 'abort';
     }
   }
-
 
   /**
    * @param \Symfony\Component\Console\Input\InputInterface $input

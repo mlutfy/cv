@@ -1,9 +1,8 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Application;
-use Civi\Cv\Encoder;
-use Symfony\Component\Console\Input\InputArgument;
+use Civi\Cv\Util\BootTrait;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -15,7 +14,8 @@ class UpgradeGetCommand extends BaseCommand {
   const DEFAULT_CHECK_URL = "https://upgrade.civicrm.org/check";
   // const DEFAULT_CHECK_URL = "http://civicrm-upgrade-manager.l/check";
 
-  use \Civi\Cv\Util\BootTrait;
+  use BootTrait;
+  use StructuredOutputTrait;
 
   /**
    * Define the command options.
@@ -24,7 +24,7 @@ class UpgradeGetCommand extends BaseCommand {
     $this
       ->setName('upgrade:get')
       ->setDescription('Find out what file you should use to upgrade')
-      ->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'Output format (' . implode(',', Encoder::getFormats()) . ')', Encoder::getDefaultFormat())
+      ->configureOutputOptions()
       ->addOption('stability', 's', InputOption::VALUE_REQUIRED, 'Specify the stability of the version to get (nightly, rc, stable)', 'stable')
       ->addOption('cms', 'c', InputOption::VALUE_REQUIRED, 'Specify the CMS to get (Backdrop, Drupal, Drupal6, Joomla, WordPress) instead of the current site')
       ->setHelp('Find out what file you should use to upgrade
@@ -52,7 +52,8 @@ Returns a JSON object with the properties:
       if (defined('CIVICRM_UF')) {
         $cms = CIVICRM_UF;
       }
-      $result['vars'] = $GLOBALS['_CV']; // REMOVE
+      // REMOVE:
+      $result['vars'] = $GLOBALS['_CV'];
     }
     if (empty($cms)) {
       throw new \RuntimeException("Cannot determine download URL without CMS");

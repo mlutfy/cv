@@ -104,7 +104,7 @@ and output parsing:
 function cv($cmd, $decode = 'json') {
   $cmd = 'cv ' . $cmd;
   $descriptorSpec = array(0 => array("pipe", "r"), 1 => array("pipe", "w"), 2 => STDERR);
-  $env = $_ENV + array('CV_OUTPUT' => 'json');
+  $env = (!empty($_ENV) ? $_ENV : getenv()) + array('CV_OUTPUT' => 'json');
   $process = proc_open($cmd, $descriptorSpec, $pipes, __DIR__, $env);
   fclose($pipes[0]);
   $result = stream_get_contents($pipes[1]);
@@ -133,7 +133,7 @@ function cv($cmd, $decode = 'json') {
 
 eval(cv('php:boot', 'phpcode'));
 $config = cv('vars:show');
-printf("We should navigate to the dsahboard: %s\n\n", cv('url civicrm/dashboard'));
+printf("We should navigate to the dashboard: %s\n\n", cv('url civicrm/dashboard'));
 ```
 
 Example: NodeJS
@@ -164,8 +164,8 @@ $ git clone https://github.com/civicrm/cv
 $ cd cv
 $ composer install
 $ export CV_TEST_BUILD=/home/me/buildkit/build/dmaster/
-$ phpunit4 --group std
-PHPUnit 4.8.21 by Sebastian Bergmann and contributors.
+$ phpunit5 --group std
+PHPUnit 5.7.27 by Sebastian Bergmann and contributors.
 
 Configuration read from /home/me/src/cv/phpunit.xml.dist
 
@@ -186,7 +186,7 @@ with various CMS's and file structures).  Prepare these builds separately
 and loop through them, e.g.
 
 ```
-$ for CV_TEST_BUILD in /home/me/buildkit/build/{dmaster,wpmaster,bmaster} ; do export CV_TEST_BUILD; phpunit4 --group std; done
+$ for CV_TEST_BUILD in /home/me/buildkit/build/{dmaster,wpmaster,bmaster} ; do export CV_TEST_BUILD; phpunit5 --group std; done
 ```
 
 Unit-Tests (Installer)
@@ -207,5 +207,5 @@ Given these extra requirements, this test runs as a separate group.
 A typical execution might look like:
 
 ```
-$ env DEBUG=1 OFFLINE=1 CV_SETUP_PATH=$HOME/src/civicrm-setup phpunit4 --group installer
+$ env DEBUG=1 OFFLINE=1 CV_SETUP_PATH=$HOME/src/civicrm-setup phpunit5 --group installer
 ```

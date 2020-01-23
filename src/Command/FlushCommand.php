@@ -1,16 +1,14 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Encoder;
-use Symfony\Component\Console\Input\InputArgument;
+use Civi\Cv\Util\BootTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-
 class FlushCommand extends BaseCommand {
 
-  use \Civi\Cv\Util\BootTrait;
+  use BootTrait;
 
   protected function configure() {
     $this

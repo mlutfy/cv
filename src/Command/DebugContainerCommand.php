@@ -1,21 +1,22 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Encoder;
+use Civi\Cv\Util\BootTrait;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class DebugContainerCommand extends BaseCommand {
 
-  use \Civi\Cv\Util\BootTrait;
+  use BootTrait;
+  use StructuredOutputTrait;
 
   protected function configure() {
     $this
       ->setName('debug:container')
       ->setDescription('Dump the container configuration')
       ->addArgument('path')
-      ->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'Output format (' . implode(',', Encoder::getTabularFormats()) . ')', Encoder::getDefaultFormat('table'))
+      ->configureOutputOptions(['tabular' => TRUE, 'fallback' => 'table'])
       ->setHelp('
 Dump the container configuration
 ');

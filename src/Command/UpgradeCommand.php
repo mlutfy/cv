@@ -1,20 +1,21 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Application;
-use Civi\Cv\Encoder;
-use Symfony\Component\Console\Input\InputArgument;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class UpgradeCommand extends BaseCommand {
+
+  use StructuredOutputTrait;
+
   protected function configure() {
     $this
       ->setName('upgrade')
       ->setDescription('Download CiviCRM and upgrade the site')
       ->addOption('in', NULL, InputOption::VALUE_REQUIRED, 'Input format (args,json)', 'args')
-      ->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'Output format (' . implode(',', Encoder::getFormats()) . ')', Encoder::getDefaultFormat())
+      ->configureOutputOptions()
       ->addOption('stability', 's', InputOption::VALUE_REQUIRED, 'Specify the stability of the version to get (nightly, rc, stable)', 'stable')
       ->setHelp('Download CiviCRM, extract in place, and upgrade the site, notifying civicrm.org
 Examples:

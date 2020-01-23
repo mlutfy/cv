@@ -1,21 +1,22 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Encoder;
 use Civi\Cv\SiteConfigReader;
+use Civi\Cv\Util\BootTrait;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ShowCommand extends BaseCommand {
 
-  use \Civi\Cv\Util\BootTrait;
+  use BootTrait;
+  use StructuredOutputTrait;
 
   protected function configure() {
     $this
       ->setName('vars:show')
       ->setDescription('Show the configuration of the local CiviCRM installation')
-      ->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'Output format (' . implode(',', Encoder::getFormats()) . ')', Encoder::getDefaultFormat());
+      ->configureOutputOptions();
     $this->configureBootOptions();
   }
 

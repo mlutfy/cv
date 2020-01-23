@@ -1,24 +1,25 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Application;
 use Civi\Cv\Encoder;
 use Civi\Cv\Util\Process;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-
 class UrlCommand extends BaseExtensionCommand {
+
+  use StructuredOutputTrait;
 
   protected function configure() {
     $this
       ->setName('url')
-      ->setDescription('Compose a URL to a CiviCRM page')
+      ->setAliases(['open'])
+      ->setDescription('Compose a URL to a CiviCRM page. (Optionally, open in a browser.)')
       ->addArgument('path', InputArgument::OPTIONAL | InputArgument::IS_ARRAY, 'Relative path to a CiviCRM page, such as "civicrm/contact/view?reset=1&cid=1"')
-      ->addOption('out', NULL, InputArgument::OPTIONAL, 'Specify return format (' . implode(',', Encoder::getTabularFormats()) . ')', Encoder::getDefaultFormat())
-      ->addOption('columns', NULL, InputOption::VALUE_REQUIRED, 'List of columns to display (comma separated; type, expr, value)')
+      ->configureOutputOptions(['tabular' => TRUE, 'availColumns' => 'type,expr,value', 'shortcuts' => ['table', 'list']])
       ->addOption('relative', 'r', InputOption::VALUE_NONE, 'Prefer relative URL format. (Default: absolute)')
       ->addOption('frontend', 'f', InputOption::VALUE_NONE, 'Generate a frontend URL (Default: backend)')
       ->addOption('open', 'O', InputOption::VALUE_NONE, 'Open a local web browser')
@@ -29,15 +30,18 @@ class UrlCommand extends BaseExtensionCommand {
       // It's ambiguous whether JSON/serialize formats should stick to the old output or multi-record output.
       ->addOption('tabular', NULL, InputOption::VALUE_NONE, 'Force display in multi-record mode. (Enabled by default for list,csv,table formats.)')
       ->setHelp('
-Compose a URL to a CiviCRM page or resource
+Compose a URL to a CiviCRM page or resource.
 
 Examples: Lookup the site root
   cv url
 
 Examples: Lookup URLs with the standard router
   cv url civicrm/dashboard
-  cv url civicrm/dashboard --open
   cv url \'civicrm/a/#/mailing/123?angularDebug=1\'
+
+Examples: Open URLs in a local browser (Linux/OSX)
+  cv open civicrm/dashboard
+  cv url civicrm/dashboard --open
 
 Examples: Lookup URLs for extension resources
   cv url -x org.civicrm.module.cividiscount
@@ -57,9 +61,17 @@ Examples: Lookup multiple URLs
   cv url -x cividiscount -x volunteer civicrm/admin --out=table
   cv url -x cividiscount -x volunteer civicrm/admin --out=json --tabular
 
+
 NOTE: To change the default output format, set CV_OUTPUT.
 ');
     $this->configureBootOptions();
+  }
+
+  protected function initialize(InputInterface $input, OutputInterface $output) {
+    parent::initialize($input, $output);
+    if ($input->getFirstArgument() === 'open') {
+      $input->setOption('open', TRUE);
+    }
   }
 
   protected function execute(InputInterface $input, OutputInterface $output) {

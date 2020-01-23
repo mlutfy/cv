@@ -1,9 +1,7 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Application;
-use Civi\Cv\Encoder;
-use Symfony\Component\Console\Input\InputArgument;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -13,6 +11,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class UpgradeReportCommand extends BaseCommand {
   const DEFAULT_REPORT_URL = 'https://upgrade.civicrm.org/report';
+
+  use StructuredOutputTrait;
 
   public static function getReportModes() {
     return array(
@@ -29,7 +29,7 @@ class UpgradeReportCommand extends BaseCommand {
     $this
       ->setName('upgrade:report')
       ->setDescription('Notify civicrm.org of your upgrade success or failure')
-      ->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'Output format (' . implode(',', Encoder::getFormats()) . ')', Encoder::getDefaultFormat())
+      ->configureOutputOptions()
       ->addOption('name', NULL, InputOption::VALUE_REQUIRED, 'Specify the name to link the report to past reports on the same upgrade')
       ->addOption('revision', NULL, InputOption::VALUE_REQUIRED, 'Precise revision being installed (e.g. 4.7.16-201701020304)')
       ->addOption('download-url', NULL, InputOption::VALUE_REQUIRED, 'Indicate the URL for the download attempt')

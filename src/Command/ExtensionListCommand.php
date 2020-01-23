@@ -1,18 +1,15 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Application;
-use Civi\Cv\Encoder;
-use Civi\Cv\Util\ArrayUtil;
-use Civi\Cv\Util\ExtensionUtil;
-use Symfony\Component\Console\Helper\Table;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-
 class ExtensionListCommand extends BaseExtensionCommand {
+
+  use StructuredOutputTrait;
 
   /**
    * @param string|null $name
@@ -31,8 +28,7 @@ class ExtensionListCommand extends BaseExtensionCommand {
       ->addOption('refresh', 'r', InputOption::VALUE_NONE, 'Refresh the list of extensions')
       ->addOption('installed', 'i', InputOption::VALUE_NONE, 'Filter extensions by "installed" status (Equivalent to --statuses=installed)')
       ->addOption('statuses', NULL, InputOption::VALUE_REQUIRED, 'Filter extensions by status (comma separated)', '*')
-      ->addOption('columns', NULL, InputOption::VALUE_REQUIRED, 'List of columns to display (comma separated)', 'location,key,name,version,status,downloadUrl')
-      ->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'Output format (' . implode(',', Encoder::getTabularFormats()) . ')', Encoder::getDefaultFormat('table'))
+      ->configureOutputOptions(['tabular' => TRUE, 'fallback' => 'table', 'defaultColumns' => 'location,key,name,version,status,downloadUrl'])
       ->addArgument('regex', InputArgument::OPTIONAL, 'Filter extensions by full key or short name')
       ->setHelp('List extensions
 
@@ -108,7 +104,7 @@ Note:
   /**
    * Find extensions matching the input args.
    *
-   * @param InputInterface $input
+   * @param \Symfony\Component\Console\Input\InputInterface $input
    * @return array
    */
   protected function find($input) {

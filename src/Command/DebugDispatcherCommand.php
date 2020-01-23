@@ -1,13 +1,16 @@
 <?php
 namespace Civi\Cv\Command;
 
+use Civi\Cv\Util\BootTrait;
+use Civi\Cv\Util\DebugDispatcherTrait;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class DebugDispatcherCommand extends BaseCommand {
 
-  use \Civi\Cv\Util\BootTrait;
+  use BootTrait;
+  use DebugDispatcherTrait;
 
   protected function configure() {
     $this
@@ -15,6 +18,7 @@ class DebugDispatcherCommand extends BaseCommand {
       ->setDescription('Dump the list of event listeners')
       ->addArgument('event', InputArgument::OPTIONAL, 'An event name or regex')
       // ->addOption('out', NULL, InputArgument::OPTIONAL, 'Specify return format (json,none,php,pretty,shell)', \Civi\Cv\Encoder::getDefaultFormat())
+      // ->configureOutputOptions()
       ->setHelp('
 Dump the list of event listeners
 
@@ -52,7 +56,5 @@ Examples:
     $eventNames = $this->findEventNames($dispatcher, $eventFilter);
     $this->printEventListeners($output, $dispatcher, $eventNames);
   }
-
-  use \Civi\Cv\Util\DebugDispatcherTrait;
 
 }

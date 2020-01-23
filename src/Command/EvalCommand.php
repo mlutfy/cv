@@ -1,17 +1,17 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Application;
 use Civi\Cv\Encoder;
+use Civi\Cv\Util\BootTrait;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-
 
 class EvalCommand extends BaseCommand {
 
-  use \Civi\Cv\Util\BootTrait;
+  use BootTrait;
+  use StructuredOutputTrait;
 
   protected function configure() {
     $this

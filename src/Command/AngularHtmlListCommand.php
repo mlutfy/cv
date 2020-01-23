@@ -1,20 +1,16 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Application;
-use Civi\Cv\Encoder;
-use Civi\Cv\Util\ArrayUtil;
-use Civi\Cv\Util\ExtensionUtil;
-use Symfony\Component\Console\Helper\Table;
+use Civi\Cv\Util\BootTrait;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-
 
 class AngularHtmlListCommand extends BaseCommand {
 
-  use \Civi\Cv\Util\BootTrait;
+  use BootTrait;
+  use StructuredOutputTrait;
 
   /**
    * @param string|null $name
@@ -28,12 +24,7 @@ class AngularHtmlListCommand extends BaseCommand {
       ->setName('ang:html:list')
       ->setAliases(array())
       ->setDescription('List Angular HTML files')
-      ->addOption('columns', NULL, InputOption::VALUE_REQUIRED,
-        'List of columns to display (comma separated)',
-        'file')
-      ->addOption('out', NULL, InputOption::VALUE_REQUIRED,
-        'Output format (' . implode(',', Encoder::getTabularFormats()) . ')',
-        Encoder::getDefaultFormat('list'))
+      ->configureOutputOptions(['tabular' => TRUE, 'fallback' => 'list', 'defaultColumns' => 'file'])
       ->addArgument('filter', InputArgument::OPTIONAL,
         'Filter by filename. For regex filtering, use semicolon delimiter.')
       ->setHelp('List Angular HTML files
@@ -61,7 +52,7 @@ Examples:
   /**
    * Find extensions matching the input args.
    *
-   * @param InputInterface $input
+   * @param \Symfony\Component\Console\Input\InputInterface $input
    * @return array
    */
   protected function find($input) {

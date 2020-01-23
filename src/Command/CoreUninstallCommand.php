@@ -1,18 +1,19 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Encoder;
-use Symfony\Component\Console\Input\InputArgument;
+use Civi\Cv\Util\SetupCommandTrait;
+use Civi\Cv\Util\DebugDispatcherTrait;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 class CoreUninstallCommand extends BaseCommand {
 
-  use \Civi\Cv\Util\SetupCommandTrait;
-  use \Civi\Cv\Util\DebugDispatcherTrait;
+  use SetupCommandTrait;
+  use DebugDispatcherTrait;
+  use StructuredOutputTrait;
 
   protected function configure() {
     $this
@@ -20,7 +21,7 @@ class CoreUninstallCommand extends BaseCommand {
       ->setDescription('Purge CiviCRM schema and settings files')
       ->configureSetupOptions()
       ->addOption('force', 'f', InputOption::VALUE_NONE, 'Remove without any prompt or confirmation')
-      ->addOption('out', NULL, InputArgument::OPTIONAL, 'Specify return format (auto,' . implode(',', Encoder::getFormats()) . ')', Encoder::getDefaultFormat())
+      ->configureOutputOptions()
       ->setHelp('
 Purge CiviCRM schema and settings files
 

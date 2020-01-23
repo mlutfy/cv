@@ -1,11 +1,9 @@
 <?php
 namespace Civi\Cv;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Input\InputArgument;
+
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class Application extends \Symfony\Component\Console\Application {
 
@@ -56,6 +54,7 @@ class Application extends \Symfony\Component\Console\Application {
   public function createCommands($context = 'default') {
     $commands = array();
     $commands[] = new \Civi\Cv\Command\ApiCommand();
+    $commands[] = new \Civi\Cv\Command\Api4Command();
     $commands[] = new \Civi\Cv\Command\ApiBatchCommand();
     $commands[] = new \Civi\Cv\Command\AngularModuleListCommand();
     $commands[] = new \Civi\Cv\Command\AngularHtmlListCommand();
@@ -71,6 +70,7 @@ class Application extends \Symfony\Component\Console\Application {
     $commands[] = new \Civi\Cv\Command\FillCommand();
     $commands[] = new \Civi\Cv\Command\FlushCommand();
     $commands[] = new \Civi\Cv\Command\PathCommand();
+    $commands[] = new \Civi\Cv\Command\SqlCliCommand();
     $commands[] = new \Civi\Cv\Command\ShowCommand();
     // $commands[] = new \Civi\Cv\Command\UpgradeCommand();
     $commands[] = new \Civi\Cv\Command\UpgradeDbCommand();

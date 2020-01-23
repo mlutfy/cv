@@ -1,21 +1,16 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Application;
-use Civi\Cv\Encoder;
-use Civi\Cv\Util\ArrayUtil;
-use Civi\Cv\Util\ExtensionUtil;
 use Civi\Cv\Util\Process;
-use Symfony\Component\Console\Helper\Table;
+use Civi\Cv\Util\BootTrait;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-
 class AngularHtmlShowCommand extends BaseCommand {
 
-  use \Civi\Cv\Util\BootTrait;
+  use BootTrait;
 
   /**
    * @param string|null $name

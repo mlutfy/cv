@@ -1,9 +1,7 @@
 <?php
 namespace Civi\Cv\Command;
 
-use Civi\Cv\Application;
-use Civi\Cv\Encoder;
-use Symfony\Component\Console\Input\InputArgument;
+use Civi\Cv\Util\StructuredOutputTrait;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -15,11 +13,13 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
  */
 class UpgradeDlCommand extends BaseCommand {
 
+  use StructuredOutputTrait;
+
   protected function configure() {
     $this
       ->setName('upgrade:dl')
       ->setDescription('Download CiviCRM code and put it in place for an upgrade')
-      ->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'Output format (' . implode(',', Encoder::getFormats()) . ')', Encoder::getDefaultFormat())
+      ->configureOutputOptions()
       ->addOption('stability', 's', InputOption::VALUE_REQUIRED, 'Specify the stability of the version to get (beta, rc, stable)', 'stable')
       ->addOption('cms', 'c', InputOption::VALUE_REQUIRED, 'Specify the cms to get (Backdrop, Drupal, Drupal6, Joomla, Wordpress) instead of the current site')
       ->addOption('url', 'u', InputOption::VALUE_REQUIRED, 'Specify the URL to a tarball/zipfile for downloading (regardless of --stability and --cms)')
