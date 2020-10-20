@@ -175,6 +175,12 @@ class Bootstrap {
     if (!defined('CIVICRM_SETTINGS_PATH')) {
 
       $this->options = $options = array_merge($this->options, $options);
+      // AEgir hack, force httpHost with site's folder
+      exec('drush core-status site-path', $site);
+      $site = trim(str_replace("Site path   :  sites/", "", $site[0]));
+      $this->options['httpHost'] = $site;
+      $this->writeln("httpHost set to: " . $site, OutputInterface::VERBOSITY_DEBUG);
+
       $this->writeln("Options: " . Encoder::encode($options, 'json-pretty'), OutputInterface::VERBOSITY_DEBUG);
 
       // Let's force env CIVICRM_SETTINGS must exists (For AEgir compatibility)
@@ -205,7 +211,7 @@ class Bootstrap {
       }
 
       // AEgir hack, we need to include drushrc.php file where db values are stored
-      $drushrc = $this->getDrushRC($options);
+      $drushrc = $this->getDrushRC($settings);
       $this->writeln("Load drushrc.php file \"" . $drushrc . "\"", OutputInterface::VERBOSITY_DEBUG);
       if (empty($drushrc) || !file_exists($drushrc)) {
         throw new \Exception("Failed to locate drushrc.php.");
@@ -226,7 +232,6 @@ class Bootstrap {
         $folders = explode('/', $settings);
         $httpHost = $folders[count($folders) - 2];
         $_SERVER['HTTP_HOST'] = $httpHost;
-
         $_SERVER['SCRIPT_FILENAME'] = $cmsBasePath . '/index.php';
         $_SERVER['REMOTE_ADDR'] = "127.0.0.1";
         $_SERVER['SERVER_SOFTWARE'] = NULL;
@@ -318,18 +323,21 @@ class Bootstrap {
   }
 
   /**
-   * @param array $options
+   * @param array $settings
    * @return string
    * @throws \Exception
    */
-  public function getDrushRC($options) {
+  public function getDrushRC($settings) {
     $drushrc = NULL;
 
-    if (defined('CIVICRM_CONFDIR') && file_exists(CIVICRM_CONFDIR . '/drushrc.php')) {
+    if (!empty($settings)) {
+      $drushrc = pathinfo($settings)['dirname'] . '/drushrc.php';
+    }
+    elseif (defined('CIVICRM_CONFDIR') && file_exists(CIVICRM_CONFDIR . '/drushrc.php')) {
       $drushrc = CIVICRM_CONFDIR . '/drushrc.php';
     }
-    elseif (!empty($options['env']) && getenv($options['env'])) {
-      $drushPath = str_replace('civicrm.settings.php', 'drushrc.php', getenv($options['env']));
+    elseif (!empty($this->options['env']) && getenv($this->options['env'])) {
+      $drushPath = str_replace('civicrm.settings.php', 'drushrc.php', getenv($this->options['env']));
       if (file_exists($drushPath)) {
         $drushrc = $drushPath;
       }
