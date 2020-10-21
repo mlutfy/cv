@@ -180,14 +180,7 @@ class Bootstrap {
       $site = trim(str_replace("Site path   :  sites/", "", $site[0]));
       $this->options['httpHost'] = $site;
       $this->writeln("httpHost set to: " . $site, OutputInterface::VERBOSITY_DEBUG);
-
       $this->writeln("Options: " . Encoder::encode($options, 'json-pretty'), OutputInterface::VERBOSITY_DEBUG);
-
-      // Let's force env CIVICRM_SETTINGS must exists (For AEgir compatibility)
-      if (empty(getenv($this->options['env']))) {
-        throw new \Exception("env variable CIVICRM_SETTINGS is not defined."
-          . " You must set variable CIVICRM_SETTINGS to point to the preferred civicrm.settings.php.");
-      }
 
       $this->writeln("Find settings file", OutputInterface::VERBOSITY_DEBUG);
       $settings = $this->getCivicrmSettingsPhp($options);
