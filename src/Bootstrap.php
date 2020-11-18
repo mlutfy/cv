@@ -174,12 +174,13 @@ class Bootstrap {
 
     if (!defined('CIVICRM_SETTINGS_PATH')) {
 
-      $this->options = $options = array_merge($this->options, $options);
       // AEgir hack, force httpHost with site's folder
       exec('drush core-status site-path', $site);
       $site = trim(str_replace("Site path   :  sites/", "", $site[0]));
-      $this->options['httpHost'] = $site;
+      $options['httpHost'] = $site;
       $this->writeln("httpHost set to: " . $site, OutputInterface::VERBOSITY_DEBUG);
+
+      $this->options = $options = array_merge($this->options, $options);
       $this->writeln("Options: " . Encoder::encode($options, 'json-pretty'), OutputInterface::VERBOSITY_DEBUG);
 
       $this->writeln("Find settings file", OutputInterface::VERBOSITY_DEBUG);
