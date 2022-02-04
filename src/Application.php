@@ -12,7 +12,19 @@ class Application extends \Symfony\Component\Console\Application {
    */
   public static function main($binDir) {
     $application = new Application('cv', '@package_version@');
-    $application->run();
+
+    $application->setAutoExit(FALSE);
+    $running = TRUE;
+    register_shutdown_function(function () use (&$running) {
+      if ($running) {
+        // Something - like a bad eval() - interrupted normal execution.
+        // Make sure the status code reflects that.
+        exit(255);
+      }
+    });
+    $result = $application->run();
+    $running = FALSE;
+    exit($result);
   }
 
   public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN') {
@@ -70,6 +82,7 @@ class Application extends \Symfony\Component\Console\Application {
     $commands[] = new \Civi\Cv\Command\FillCommand();
     $commands[] = new \Civi\Cv\Command\FlushCommand();
     $commands[] = new \Civi\Cv\Command\PathCommand();
+    $commands[] = new \Civi\Cv\Command\PipeCommand();
     $commands[] = new \Civi\Cv\Command\SqlCliCommand();
     $commands[] = new \Civi\Cv\Command\ShowCommand();
     // $commands[] = new \Civi\Cv\Command\UpgradeCommand();

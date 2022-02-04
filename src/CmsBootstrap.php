@@ -2,6 +2,8 @@
 namespace Civi\Cv;
 
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Symfony\Component\Routing\Route;
 
 /**
  * Bootstrap the CMS runtime.
@@ -20,7 +22,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @endcode
  *
  * This class is intended to be run *before* the classloader is available. Therefore, it
- * must be self-sufficient.
+ * must be self-sufficient - do not rely on other classes, even in the same package.
  *
  * By default, bootstrap will scan PWD and every ancestor directory to see if it
  * contains a supported CMS. If you have performance considerations, or if the
@@ -55,7 +57,7 @@ class CmsBootstrap {
   protected $output = FALSE;
 
   /**
-   * @var array|NULL
+   * @var array|null
    */
   protected $bootedCms = NULL;
 
@@ -101,7 +103,7 @@ class CmsBootstrap {
    * @throws \Exception
    */
   public function bootCms() {
-    $this->writeln("Options: " . Encoder::encode($this->options, 'json-pretty'), OutputInterface::VERBOSITY_DEBUG);
+    $this->writeln("Options: " . json_encode($this->options, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), OutputInterface::VERBOSITY_DEBUG);
 
     if ($this->options['env'] && getenv($this->options['env'])) {
       $cmsExpr = getenv($this->options['env']);
@@ -126,7 +128,7 @@ class CmsBootstrap {
       $cms = $this->findCmsRoot($this->getSearchDir());
     }
 
-    $this->writeln("CMS: " . Encoder::encode($cms, 'json-pretty'), OutputInterface::VERBOSITY_DEBUG);
+    $this->writeln("CMS: " . json_encode($options, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), OutputInterface::VERBOSITY_DEBUG);
     if (empty($cms['path']) || empty($cms['type']) || !file_exists($cms['path'])) {
       $cmsJson = json_encode($cms, JSON_UNESCAPED_SLASHES);
       throw new \Exception("Failed to parse or find a CMS $cmsJson");
@@ -136,7 +138,6 @@ class CmsBootstrap {
       $this->writeln("Simulate web environment in CLI", OutputInterface::VERBOSITY_DEBUG);
       $this->simulateWebEnv($this->options['httpHost'], $cms['path'] . '/index.php');
     }
-
     $func = 'boot' . $cms['type'];
     if (!is_callable([$this, $func])) {
       throw new \Exception("Failed to locate boot function ($func)");
@@ -182,6 +183,10 @@ class CmsBootstrap {
     // PRE-CONDITIONS: CMS has already been booted, and Civi is already installed.
     if (function_exists('civicrm_initialize')) {
       civicrm_initialize();
+    }
+    elseif (class_exists('Drupal')) {
+      //Drupal 8 / 9
+      \Drupal::service('civicrm')->initialize();
     }
     // else if Joomla weirdness, do that
     else {
@@ -256,7 +261,13 @@ class CmsBootstrap {
     $request = \Symfony\Component\HttpFoundation\Request::createFromGlobals();
     $kernel = \Drupal\Core\DrupalKernel::createFromRequest($request, $autoloader, 'prod');
     $kernel->boot();
-    $kernel->prepareLegacyRequest($request);
+    $kernel->preHandle($request);
+    $container = $kernel->rebuildContainer();
+    // Add our request to the stack and route context.
+    $request->attributes->set(RouteObjectInterface::ROUTE_OBJECT, new Route('<none>'));
+    $request->attributes->set(RouteObjectInterface::ROUTE_NAME, '<none>');
+    $container->get('request_stack')->push($request);
+    $container->get('router.request_context')->fromRequest($request);
 
     if (!function_exists('t')) {
       throw new \Exception('Sorry, could not bootstrap Drupal8.');

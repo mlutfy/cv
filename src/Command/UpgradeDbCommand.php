@@ -36,6 +36,9 @@ Examples:
   }
 
   protected function execute(InputInterface $input, OutputInterface $output) {
+    if (!defined('CIVICRM_UPGRADE_ACTIVE')) {
+      define('CIVICRM_UPGRADE_ACTIVE', 1);
+    }
     $this->boot($input, $output);
 
     if (!ini_get('safe_mode')) {
@@ -138,6 +141,13 @@ Examples:
     }
 
     $output->writeln("<info>Upgrade to <comment>$codeVer</comment> completed.</info>", $niceMsgVerbosity);
+
+    if (version_compare($codeVer, '5.26.alpha', '<')) {
+      // Work-around for bugs like dev/core#1713.
+      // Note that #1713 didn't affect earlier versions of `cv` because they mistakenly omitted CIVICRM_UPGRADE_ACTIVE.
+      $output->writeln('<info>Detected CiviCRM 5.25 or earlier. Force flush.</info>');
+      \Civi\Cv\Util\Cv::passthru("flush");
+    }
 
     $output->writeln("<info>Checking post-upgrade messages...</info>", $niceMsgVerbosity);
     $message = file_get_contents($postUpgradeMessageFile);

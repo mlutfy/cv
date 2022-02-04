@@ -5,7 +5,7 @@ namespace Civi\Cv\Util;
  * @group std
  * @group util
  */
-class Api4ArgParserTest extends \PHPUnit_Framework_TestCase {
+class Api4ArgParserTest extends \PHPUnit\Framework\TestCase {
 
   public function getGoodExamples() {
     $exs = [];
@@ -54,6 +54,14 @@ class Api4ArgParserTest extends \PHPUnit_Framework_TestCase {
     $exs[] = [
       ['+w=id is not null', '+w=id>=234'],
       ['where' => [['id', 'IS NOT NULL'], ['id', '>=', '234']]],
+    ];
+    $exs[] = [
+      ['+w', 'foo:bar=apple', '+where', 'whiz.bang=banana'],
+      ['where' => [['foo:bar', '=', 'apple'], ['whiz.bang', '=', 'banana']]],
+    ];
+    $exs[] = [
+      ['+v', 'foo:bar=apple', '+value', 'whiz.bang=banana'],
+      ['values' => ['foo:bar' => 'apple', 'whiz.bang' => 'banana']],
     ];
     $exs[] = [
       ['+where:display_name like "alice%"', '+w:id >= 234'],
