@@ -61,6 +61,7 @@ trait StructuredOutputTrait {
     sort($formats);
 
     $this->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'Output format (' . implode(',', $formats) . ')', Encoder::getDefaultFormat($fallback));
+    $this->addOption('flat', NULL, InputOption::VALUE_OPTIONAL, 'Flatten output data. Optionally specified a delimiter.', '.');
 
     if (!empty($config['shortcuts'])) {
       foreach ($config['shortcuts'] as $format) {
@@ -94,6 +95,10 @@ trait StructuredOutputTrait {
    * @see Encoder::getFormats
    */
   protected function sendResult(InputInterface $input, OutputInterface $output, $result) {
+    $flat = $this->parseOptionalOption($input, ['--flat'], FALSE, '.');
+    if ($flat !== FALSE) {
+      $result = ArrayUtil::implodeTree($flat, $result);
+    }
     $buf = Encoder::encode($result, $input->getOption('out'));
     $options = empty($result['is_error'])
       ? (OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_NORMAL)
@@ -123,40 +128,84 @@ trait StructuredOutputTrait {
     if (is_array($columns) && in_array('*', $columns)) {
       $columns = NULL;
     }
+    $columns = $columns ? $columns : ArrayUtil::findColumns($records);
+
+    // If it's not one of our, then fallback to generic rendering
+    if (!in_array($input->getOption('out'), ['table', 'csv', 'list'])) {
+      // Use a generic format.
+      $this->sendResult($input, $output, ArrayUtil::filterColumns($records, $columns));
+      return;
+    }
+
+    $flat = $this->parseOptionalOption($input, ['--flat'], FALSE, '.');
+    if ($flat !== FALSE) {
+      $filtered = ArrayUtil::filterColumns($records, $columns);
+      $flattened = ArrayUtil::implodeTree($flat, $filtered);
+      $records = ArrayUtil::convertKeyValueRecord($flattened, 'key', 'value');
+      $columns = ['key', 'value'];
+      $convertAssocToNum = function($rows, $columns) {
+        return $rows;
+      };
+    }
+    else {
+      $convertAssocToNum = [ArrayUtil::class, 'convertAssocToNum'];
+    }
+    $flattenValues = function($rows) {
+      return array_map(
+        function($row) {
+          return array_map(
+            function($value) {
+              if (is_scalar($value)) {
+                return $value;
+              }
+              elseif ($value === NULL) {
+                return '';
+              }
+              elseif (is_array($value)) {
+                return json_encode($value);
+              }
+              elseif (is_object($value)) {
+                return '(' . get_class($value) . ')';
+              }
+              else {
+                return '(' . gettype($value) . ')';
+              }
+            },
+            $row
+          );
+        },
+        $rows
+      );
+    };
 
     switch ($input->getOption('out')) {
       case 'table':
         // Display a pleasant-looking table.
-        $columns = $columns ? $columns : ArrayUtil::findColumns($records);
         $table = new Table($output);
-        $table->setHeaders($columns);
-        $table->addRows(ArrayUtil::convertAssocToNum($records, $columns));
+        $table->setHeaders($columns ?: []);
+        $table->addRows($flattenValues($convertAssocToNum($records, $columns)));
         $table->render();
         break;
 
       case 'csv':
         // Display CSV-formatted table.
-        $columns = $columns ? $columns : ArrayUtil::findColumns($records);
         // FIXME Link fputcsv to $output
         fputcsv(STDOUT, $columns);
-        foreach (ArrayUtil::convertAssocToNum($records, $columns) as $record) {
+        foreach ($convertAssocToNum($records, $columns) as $record) {
           fputcsv(STDOUT, $record);
         }
         break;
 
       case 'list':
         // Display a flat list from the first column.
-        $columns = $columns ? $columns : ArrayUtil::findColumns($records);
+        $col = ($flat === FALSE) ? $columns[0] : 'value';
         foreach ($records as $record) {
-          $output->writeln($record[$columns[0]], OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_NORMAL);
+          $output->writeln($record[$col], OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_NORMAL);
         }
         break;
 
       default:
-        // Use a generic format.
-        $this->sendResult($input, $output,
-          $columns ? ArrayUtil::filterColumns($records, $columns) : $records);
-        break;
+        throw new \RuntimeException("Unsupported table format: " . $input->getOption('out'));
     }
   }
 

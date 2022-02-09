@@ -101,8 +101,7 @@ trait BootTrait {
     if ($input->getOption('user')) {
       $output->writeln('<info>[BootTrait]</info> Set system user', OutputInterface::VERBOSITY_DEBUG);
       if (is_callable(array(\CRM_Core_Config::singleton()->userSystem, 'loadUser'))) {
-        \CRM_Core_Config::singleton()->userSystem->loadUser($input->getOption('user'));
-        if (!$this->ensureUserContact($output)) {
+        if (!\CRM_Core_Config::singleton()->userSystem->loadUser($input->getOption('user')) || !$this->ensureUserContact($output)) {
           throw new \Exception("Failed to determine contactID for user=" . $input->getOption('user'));
         }
       }
@@ -214,7 +213,7 @@ trait BootTrait {
     $output->writeln('[BootTrait] Attempting to set verbose error reporting', OutputInterface::VERBOSITY_DEBUG);
     // standard php debug chat settings
     error_reporting(E_ALL | E_STRICT);
-    ini_set('display_errors', TRUE);
+    ini_set('display_errors', 'stderr');
     ini_set('display_startup_errors', TRUE);
   }
 

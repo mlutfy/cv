@@ -13,32 +13,48 @@ class ApiBatchCommand extends BaseCommand {
   /**
    * @var array
    */
-  public $defaults;
+  public $defaults = [];
+
+  public $metaDefaults = [
+    'v3' => ['version' => 3],
+    'v4' => ['version' => 4, 'checkPermissions' => FALSE],
+  ];
 
   /**
    * @param string|null $name
    */
   public function __construct($name = NULL) {
-    $this->defaults = array('version' => 3);
     parent::__construct($name);
   }
 
   protected function configure() {
     $this
       ->setName('api:batch')
-      ->setDescription('Call an API (batch mode)')
+      ->setDescription('Call multiple APIs via STDIN/STDOUT (bidirectional pipe; batch mode)')
       ->addOption('in', NULL, InputOption::VALUE_REQUIRED, 'Input format (json)', 'json')
       ->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'Output format (json)', 'json')
-      ->setHelp('Call a series of APIs
+      ->addOption('defaults', NULL, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Set default options for all requests (Either string \'v3\', \'v4\', or a JSON object \'{key:value...}\'', ['v3'])
+      ->setHelp('Call multiple APIs via STDIN/STDOUT (bidirectional pipe; batch mode)
 
-Examples:
-  echo \'[["Contact","get",{"id":100}],["Contact","get",{"id":100}]]\' | cv api:batch
+The api:batch command implements a line-oriented protocol for running CiviCRM APIs using pipes. In basic form, you may pipe in JSON:
 
-Each line of input is decoded as a JSON document. The JSON document is an array
-of API calls.
+Example: APIv3
+  echo \'[["Contact","get",{"id":100}],["Contact","get",{"id":101}]]\' | cv api:batch
 
-Each line of output is encoded as a JSON document. The JSON document is an array
-of API results.
+Example: APIv4
+  echo \'[["Contact","get",{"where":[["id","=",100]]}]]\' | cv api:batch --defaults=v4
+
+Example: Extra defaults
+  echo \'[["Contact","get",{"where":[["id","=",100]]}]]\' | cv api:batch --defaults=\'{"version":4,"checkPermissions":true}\'
+
+More advanced consumers may use bi-directional piping to send and receive multiple, dynamic calls - without requiring multiple bootstraps.
+
+Protocol:
+
+* Client may submit multiple lines of input (separated by \\n).
+* Each line is executed synchronously. Caller should write one line and then read one line.
+* Each line of input is a JSON document, listing a batch of API requests.
+* Each line of output is a JSON document, listing a batch of API responses.
 ');
     $this->configureBootOptions();
   }
@@ -49,6 +65,31 @@ of API results.
       throw new \Exception("api:batch only supports JSON dialog");
     }
     $this->boot($input, $output);
+
+    $addDefault = function($v) {
+      $this->defaults = \CRM_Utils_Array::crmArrayMerge($v, $this->defaults);
+    };
+    foreach ((array) $input->getOption('defaults') as $dflExpr) {
+      if (isset($this->metaDefaults[$dflExpr])) {
+        $addDefault($this->metaDefaults[$dflExpr]);
+      }
+      elseif ($dflExpr[0] === '{') {
+        if (($parsed = json_decode($dflExpr, 1)) !== NULL) {
+          $addDefault($parsed);
+        }
+        else {
+          throw new \Exception("Malformed defaults (JSON): $dflExpr");
+        }
+      }
+      else {
+        throw new \Exception("Malformed defaults: $dflExpr");
+      }
+    }
+
+    if ($output->isVerbose()) {
+      fwrite(STDERR, sprintf("Set API defaults: %s\n", json_encode($this->defaults, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)));
+    }
+
     $lineNum = 0;
 
     // stream_set_blocking(STDIN, 0);
@@ -72,8 +113,9 @@ of API results.
             continue;
           }
           list ($entity, $action, $params) = $api;
-          if (!isset($params['version'])) {
-            $params['version'] = 3;
+          $params = \CRM_Utils_Array::crmArrayMerge($params, $this->defaults);
+          if ($output->isVerbose()) {
+            fwrite(STDERR, sprintf("Execute API calls: %s\n", json_encode([$entity, $action, $params], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)));
           }
           $result[$k] = \civicrm_api($entity, $action, $params);
         }

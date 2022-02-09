@@ -11,9 +11,9 @@ A local CiviCRM installation.
 PHP v5.6+.
 
 Support may vary depending on the host environment (CMS type, file-structure, symlinks, etc).
- * *Tested heavily*: Drupal 7 single-site, WordPress single-site, UnitTests
- * *Tested lightly*: Backdrop single-site, WordPress (alternate content root)
- * *Untested*: Drupal 7 multi-site, WordPress multi-site, Joomla, Drupal 6, Drupal 8; any heavy symlinking
+ * *Tested heavily*: Drupal 7/8 single-site, WordPress single-site, UnitTests
+ * *Tested lightly*: Drupal 9 single-site, Backdrop single-site, WordPress (alternate content root)
+ * *Untested*: Drupal 7 multi-site, WordPress multi-site, Joomla, Drupal 6; any heavy symlinking
    * *Tip*: If you use an untested or incompatible host environment, then you may see the error `Failed to locate civicrm.settings.php`. See [StackExchange](http://civicrm.stackexchange.com/questions/12732/civix-reports-failed-to-locate-civicrm-settings-php) to discuss work-arounds.
 
 Download
@@ -52,7 +52,8 @@ Example: CLI
 me@localhost$ cd /var/www/my/web/site
 me@localhost$ cv vars:show
 me@localhost$ cv scr /path/to/throwaway.php
-me@localhost$ cv ev 'echo Civi::paths()->get("[civicrm.root]/.");'
+me@localhost$ cv ev 'echo Civi::paths()->getPath("[civicrm.root]/.");'
+me@localhost$ cv ev 'echo Civi::paths()->getUrl("[civicrm.root]/.");'
 me@localhost$ cv url civicrm/dashboard --open
 me@localhost$ cv api contact.get last_name=Smith
 me@localhost$ cv dl cividiscount
@@ -164,16 +165,15 @@ $ git clone https://github.com/civicrm/cv
 $ cd cv
 $ composer install
 $ export CV_TEST_BUILD=/home/me/buildkit/build/dmaster/web/
-$ phpunit5 --group std
-PHPUnit 5.7.27 by Sebastian Bergmann and contributors.
+$ phpunit7 --group std
+PHPUnit 7.5.15 by Sebastian Bergmann and contributors.
 
-Configuration read from /home/me/src/cv/phpunit.xml.dist
+...............................................................  63 / 118 ( 53%)
+.......................................................         118 / 118 (100%)
 
-.................................................
+Time: 3.13 minutes, Memory: 14.00 MB
 
-Time: 2 seconds, Memory: 6.50Mb
-
-OK (49 tests, 121 assertions)
+OK (118 tests, 295 assertions)
 ```
 
 > We generally choose an existing installation based on `civibuild`
@@ -186,7 +186,7 @@ with various CMS's and file structures).  Prepare these builds separately
 and loop through them, e.g.
 
 ```
-$ for CV_TEST_BUILD in /home/me/buildkit/build/{dmaster,wpmaster,bmaster} ; do export CV_TEST_BUILD; phpunit5 --group std; done
+$ for CV_TEST_BUILD in /home/me/buildkit/build/{dmaster,wpmaster,bmaster} ; do export CV_TEST_BUILD; phpunit7 --group std; done
 ```
 
 Unit-Tests (Installer)
@@ -207,5 +207,5 @@ Given these extra requirements, this test runs as a separate group.
 A typical execution might look like:
 
 ```
-$ env DEBUG=1 OFFLINE=1 CV_SETUP_PATH=$HOME/src/civicrm-setup phpunit5 --group installer
+$ env DEBUG=1 OFFLINE=1 CV_SETUP_PATH=$HOME/src/civicrm-setup phpunit7 --group installer
 ```
