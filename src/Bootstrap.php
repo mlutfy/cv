@@ -440,8 +440,8 @@ class Bootstrap {
           $cmsRoot . '/*/blogs.dir/*/files/civicrm',
         );
         // Aegir-WP support
-        if (file_exists(getcwd() . '/wp-content/uploads/civicrm')) {
-          $wpDirs[] = getcwd() . '/wp-content/uploads/civicrm';
+        if ($aegirSiteRoot = $this->findAegirSiteRoot($searchDir)) {
+          $wpDirs[] = $aegirSiteRoot . '/wp-content/uploads/civicrm';
         }
         $settings = $this->findFirstFile($wpDirs, 'civicrm.settings.php');
         break;
@@ -539,6 +539,26 @@ class Bootstrap {
     }
 
     return array(NULL, NULL);
+  }
+
+  /**
+   * @param string $searchDir
+   *   The directory from which to begin the upward search.
+   * @return array
+   *   Array(string $cmsType, string $cmsRoot, string $civiRoot)
+   */
+  protected function findAegirSiteRoot($searchDir) {
+    $parts = explode('/', str_replace('\\', '/', $searchDir));
+    while (!empty($parts)) {
+      $basePath = implode('/', $parts);
+
+      if (file_exists($basePath . '/drushrc.php')) {
+        return $basePath;
+      }
+      array_pop($parts);
+    }
+
+    return NULL;
   }
 
   /**
